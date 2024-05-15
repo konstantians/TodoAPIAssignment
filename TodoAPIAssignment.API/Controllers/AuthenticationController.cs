@@ -35,4 +35,22 @@ public class AuthenticationController : ControllerBase
             return StatusCode(500, "Internal Server Error"); ;
         }
     }
+
+    [HttpPost("LogIn")]
+    public async Task<IActionResult> LogIn([FromBody] LogInRequestModel logInRequestModel)
+    {
+        try
+        {
+            string result = await _authenticationDataAccess.LogInAsync(logInRequestModel.Username!, logInRequestModel.Password!)!;
+
+            if (result == "InvalidCredentials")
+                return BadRequest(new { ErrorMessage = "InvalidCredentialsError" });
+
+            return Ok(new { Token = result });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "Internal Server Error"); ;
+        }
+    }
 }
