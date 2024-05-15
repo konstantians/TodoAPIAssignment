@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPIAssignment.Authentic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPIAssignment.AuthenticationLibrary.Tests", "TodoAPIAssignment.AuthenticationLibrary.Tests\TodoAPIAssignment.AuthenticationLibrary.Tests.csproj", "{042809AF-B67A-4560-BE23-89DB900CFE0D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPIAssignement.API.Tests", "TodoAPIAssignement.API.Tests\TodoAPIAssignement.API.Tests.csproj", "{F3FBA7E2-E89A-4DC8-B3FB-FFB2DEC977CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{042809AF-B67A-4560-BE23-89DB900CFE0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{042809AF-B67A-4560-BE23-89DB900CFE0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{042809AF-B67A-4560-BE23-89DB900CFE0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3FBA7E2-E89A-4DC8-B3FB-FFB2DEC977CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3FBA7E2-E89A-4DC8-B3FB-FFB2DEC977CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3FBA7E2-E89A-4DC8-B3FB-FFB2DEC977CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3FBA7E2-E89A-4DC8-B3FB-FFB2DEC977CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
