@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
+using TodoAPIAssignment.AuthenticationLibrary.Enums;
+using TodoAPIAssignment.AuthenticationLibrary.Models;
 
 namespace TodoAPIAssignment.AuthenticationLibrary.Tests.UnitTests;
 
@@ -43,11 +45,11 @@ public class LogInUnitTests
         _config["Jwt:Audience"].ReturnsNull();
 
         //Act
-        string? result = await _authenticationDataAccess.LogInAsync("konstantinos", "password")!;
+        AuthenticationResult? result = await _authenticationDataAccess.LogInAsync("konstantinos", "password")!;
 
         //Assert
         result.Should().NotBeNull();
-        result.Should().Be("DatabaseError");
+        result.ErrorCode.Should().Be(ErrorCode.DatabaseError);
     }
 
     [Test]
@@ -56,11 +58,11 @@ public class LogInUnitTests
         //Arrange
 
         //Act
-        string? result = await _authenticationDataAccess.LogInAsync("konstantinos", "falsePassword")!;
+        AuthenticationResult? result = await _authenticationDataAccess.LogInAsync("konstantinos", "falsePassword")!;
 
         //Assert
         result.Should().NotBeNull();
-        result.Should().Be("InvalidCredentials");
+        result.ErrorCode.Should().Be(ErrorCode.InvalidCredentials);
     }
 
     [Test]
@@ -69,13 +71,13 @@ public class LogInUnitTests
         //Arrange
 
         //Act
-        string? result = await _authenticationDataAccess.LogInAsync("konstantinos", "password")!;
+        AuthenticationResult? result = await _authenticationDataAccess.LogInAsync("konstantinos", "password")!;
 
         //Assert
         result.Should().NotBeNull();
-        result.Should().NotBe("DatabaseError");
-        result.Should().NotBe("InvalidCredentials");
-        result.Length.Should().BeGreaterThan(30);    
+        result.ErrorCode.Should().Be(ErrorCode.None);
+        result.Token!.Should().NotBeNull();
+        result.Token!.Length.Should().BeGreaterThan(30);
     }
 
     [TearDown]

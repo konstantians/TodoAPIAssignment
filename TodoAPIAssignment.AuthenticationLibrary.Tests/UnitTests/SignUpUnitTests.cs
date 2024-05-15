@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using NSubstitute;
+using TodoAPIAssignment.AuthenticationLibrary.Enums;
 using TodoAPIAssignment.AuthenticationLibrary.Models;
 
 namespace TodoAPIAssignment.AuthenticationLibrary.Tests.UnitTests;
@@ -35,11 +36,11 @@ public class SignUpUnitTests
         //missing configuration causes the test to fail. This is 1 way to get to the exception
 
         //Act
-        string? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "kinnaskonstantinos0@gmail.com")!;
+        AuthenticationResult? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "kinnaskonstantinos0@gmail.com")!;
 
         //Assert
         result.Should().NotBeNull();
-        result.Should().Be("DatabaseError");
+        result.ErrorCode.Should().Be(ErrorCode.DatabaseError);
     }
 
     [Test]
@@ -51,11 +52,11 @@ public class SignUpUnitTests
         await _authDbContext.SaveChangesAsync();
 
         //Act
-        string? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "giannis@gmail.com")!;
+        AuthenticationResult? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "giannis@gmail.com")!;
 
         //Assert
         result.Should().NotBeNull();
-        result.Should().Be("DuplicateUsernameError");
+        result.ErrorCode.Should().Be(ErrorCode.DuplicateUsername);
     }
 
     [Test]
@@ -67,11 +68,11 @@ public class SignUpUnitTests
         await _authDbContext.SaveChangesAsync();
 
         //Act
-        string? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "kinnaskonstantinos0@gmail.com")!;
+        AuthenticationResult? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "kinnaskonstantinos0@gmail.com")!;
 
         //Assert
         result.Should().NotBeNull();
-        result.Should().Be("DuplicateEmailError");
+        result.ErrorCode.Should().Be(ErrorCode.DuplicateEmail);
     }
 
     [Test]
@@ -83,12 +84,14 @@ public class SignUpUnitTests
         _config["Jwt:Audience"].Returns("TodoAPIAssignment.API");
 
         //Act
-        string? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "kinnaskonstantinos0@gmail.com")!;
+        AuthenticationResult? result = await _authenticationDataAccess.SignUpAsync("konstantinos", "password", "kinnaskonstantinos0@gmail.com")!;
 
         //Assert
         result.Should().NotBeNull();
         _authDbContext.Users.Should().HaveCount(1);
-        result.Should().NotContain("Error");
+        result.ErrorCode.Should().Be(ErrorCode.None);
+        result.Token.Should().NotBeNull();
+        result.Token!.Length.Should().BeGreaterThan(30);
     }
 
     [TearDown]

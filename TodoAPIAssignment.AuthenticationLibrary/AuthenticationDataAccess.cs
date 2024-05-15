@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using TodoAPIAssignment.AuthenticationLibrary.Enums;
 using TodoAPIAssignment.AuthenticationLibrary.Models;
 
 namespace TodoAPIAssignment.AuthenticationLibrary;
@@ -19,17 +20,17 @@ public class AuthenticationDataAccess : IAuthenticationDataAccess
         _config = config;
     }
 
-    public async Task<string>? SignUpAsync(string username, string password, string email)
+    public async Task<AuthenticationResult>? SignUpAsync(string username, string password, string email)
     {
         try
         {
             AppUser? user = await _authDbContext.Users.FirstOrDefaultAsync(user => user.Username == username);
             if (user is not null)
-                return "DuplicateUsernameError";
+                return new AuthenticationResult() { ErrorCode = ErrorCode.DuplicateUsername };
 
             user = await _authDbContext.Users.FirstOrDefaultAsync(user => user.Email == email);
             if (user is not null)
-                return "DuplicateEmailError";
+                return new AuthenticationResult() { ErrorCode = ErrorCode.DuplicateEmail };
 
             AppUser newUser = new AppUser()
             {
@@ -44,28 +45,28 @@ public class AuthenticationDataAccess : IAuthenticationDataAccess
             await _authDbContext.SaveChangesAsync();
 
             string token = GenerateToken(newUser);
-            return token;
+            return new AuthenticationResult() { ErrorCode = ErrorCode.None, Token = token};
         }
         catch (Exception)
         {
-            return "DatabaseError";
+            return new AuthenticationResult() { ErrorCode = ErrorCode.DatabaseError };
         }
     }
 
-    public async Task<string>? LogInAsync(string username, string password)
+    public async Task<AuthenticationResult>? LogInAsync(string username, string password)
     {
         try
         {
             AppUser? user = await _authDbContext.Users.FirstOrDefaultAsync(user => user.Username == username);
             if (user is null || user!.Password != password)
-                return "InvalidCredentials";
+                return new AuthenticationResult() { ErrorCode = ErrorCode.InvalidCredentials };
 
             string token = GenerateToken(user);
-            return token;
+            return new AuthenticationResult() { ErrorCode = ErrorCode.None, Token = token };
         }
         catch (Exception)
         {
-            return "DatabaseError";
+            return new AuthenticationResult() { ErrorCode = ErrorCode.DatabaseError };
         }
     }
 
