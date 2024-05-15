@@ -42,9 +42,7 @@ public class AuthenticationControllerTests
 
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/signup", signUpRequestModel);
-        string? responseBody = await response.Content.ReadAsStringAsync();
-        var token = JsonSerializer.Deserialize<Dictionary<string, string>>(responseBody);
-        token!.TryGetValue("token", out string? tokenValue);
+        string? tokenValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "token");
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -65,9 +63,7 @@ public class AuthenticationControllerTests
 
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/signup", signUpRequestModel);
-        string? responseBody = await response.Content.ReadAsStringAsync();
-        var errorMessage = JsonSerializer.Deserialize<Dictionary<string, string>>(responseBody);
-        errorMessage!.TryGetValue("errorMessage", out string? errorMessageValue);
+        string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -88,14 +84,52 @@ public class AuthenticationControllerTests
 
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/signup", signUpRequestModel);
-        string? responseBody = await response.Content.ReadAsStringAsync();
-        var errorMessage = JsonSerializer.Deserialize<Dictionary<string, string>>(responseBody);
-        errorMessage!.TryGetValue("errorMessage", out string? errorMessageValue);
+        string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         errorMessageValue.Should().NotBeNullOrEmpty();
         errorMessageValue.Should().Be("DuplicateEmailError");
+    }
+
+    [Test, Order(4)]
+    public async Task LogIn_ShouldFailAndReturnBadRequest_IfInvalidCredentials()
+    {
+        //Arrange
+        LogInRequestModel logInRequestModel = new LogInRequestModel()
+        {
+            Username = "bogusUser",
+            Password = "bogusPassword"
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/login", logInRequestModel);
+        string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessageValue.Should().NotBeNullOrEmpty();
+        errorMessageValue.Should().Be("InvalidCredentialsError");
+    }
+
+    [Test, Order(5)]
+    public async Task LogIn_ShouldReturnOkAndAccessToken()
+    {
+        //Arrange
+        LogInRequestModel logInRequestModel = new LogInRequestModel()
+        {
+            Username = "konstantinos",
+            Password = "password"
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/login", logInRequestModel);
+        string? tokenValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "token");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        tokenValue.Should().NotBeNullOrEmpty();
+        tokenValue!.Length.Should().BeGreaterThan(30);
     }
 
     [TearDown]
