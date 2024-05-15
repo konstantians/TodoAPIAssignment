@@ -52,6 +52,23 @@ public class AuthenticationDataAccess : IAuthenticationDataAccess
         }
     }
 
+    public async Task<string>? SignInAsync(string username, string password)
+    {
+        try
+        {
+            AppUser? user = await _authDbContext.Users.FirstOrDefaultAsync(user => user.Username == username);
+            if (user is null || user!.Password != password)
+                return "InvalidCredentials";
+
+            string token = GenerateToken(user);
+            return token;
+        }
+        catch (Exception)
+        {
+            return "DatabaseError";
+        }
+    }
+
     private string GenerateToken(AppUser user)
     {
         // Create claims for the user
