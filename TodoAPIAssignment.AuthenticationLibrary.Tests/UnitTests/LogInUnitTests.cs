@@ -43,7 +43,7 @@ public class LogInUnitTests
         _config["Jwt:Audience"].ReturnsNull();
 
         //Act
-        string? result = await _authenticationDataAccess.SignInAsync("konstantinos", "password")!;
+        string? result = await _authenticationDataAccess.LogInAsync("konstantinos", "password")!;
 
         //Assert
         result.Should().NotBeNull();
@@ -56,7 +56,7 @@ public class LogInUnitTests
         //Arrange
 
         //Act
-        string? result = await _authenticationDataAccess.SignInAsync("konstantinos", "falsePassword")!;
+        string? result = await _authenticationDataAccess.LogInAsync("konstantinos", "falsePassword")!;
 
         //Assert
         result.Should().NotBeNull();
@@ -69,7 +69,7 @@ public class LogInUnitTests
         //Arrange
 
         //Act
-        string? result = await _authenticationDataAccess.SignInAsync("konstantinos", "password")!;
+        string? result = await _authenticationDataAccess.LogInAsync("konstantinos", "password")!;
 
         //Assert
         result.Should().NotBeNull();

@@ -52,7 +52,7 @@ public class AuthenticationDataAccess : IAuthenticationDataAccess
         }
     }
 
-    public async Task<string>? SignInAsync(string username, string password)
+    public async Task<string>? LogInAsync(string username, string password)
     {
         try
         {
