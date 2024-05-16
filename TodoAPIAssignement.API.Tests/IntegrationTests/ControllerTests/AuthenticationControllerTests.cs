@@ -15,6 +15,7 @@ namespace TodoAPIAssignement.API.Tests.IntegrationTests.ControllerTests;
 public class AuthenticationControllerTests
 {
     private HttpClient httpClient;
+    private string? _accessToken;
 
     [OneTimeSetUp]
     public void OneTimeSetUp()
@@ -130,6 +131,63 @@ public class AuthenticationControllerTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         tokenValue.Should().NotBeNullOrEmpty();
         tokenValue!.Length.Should().BeGreaterThan(30);
+
+        //used for test below
+        _accessToken = tokenValue; 
+    }
+
+    [Test, Order(6)]
+    public async Task LogOut_ShouldFailAndReturnBadRequest_IfInvalidAccessToken()
+    {
+        //Arrange
+        LogOutRequestModel logOutRequestModel = new LogOutRequestModel()
+        {
+            Token = "bogusToken"
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", logOutRequestModel);
+        string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessageValue.Should().NotBeNullOrEmpty();
+        errorMessageValue.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(7)]
+    public async Task LogOut_ShouldLogOutUserAndReturnOk()
+    {
+        //Arrange
+        LogOutRequestModel logOutRequestModel = new LogOutRequestModel()
+        {
+            Token = _accessToken
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", logOutRequestModel);
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Test, Order(8)]
+    public async Task LogOut_ShouldFailAndReturnBadRequest_IfSameAccessTokenIsUsedAfterLogOut()
+    {
+        //Arrange
+        LogOutRequestModel logOutRequestModel = new LogOutRequestModel()
+        {
+            Token = _accessToken
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", logOutRequestModel);
+        string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessageValue.Should().NotBeNullOrEmpty();
+        errorMessageValue.Should().Be("InvalidAccessToken");
     }
 
     [TearDown]
