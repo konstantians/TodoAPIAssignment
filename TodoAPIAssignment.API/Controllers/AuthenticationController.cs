@@ -55,4 +55,23 @@ public class AuthenticationController : ControllerBase
             return StatusCode(500, new { ErrorMessage = "InternalServerError" }); ;
         }
     }
+
+    [HttpPost("LogOut")]
+    public async Task<IActionResult> LogOut([FromBody] LogOutRequestModel logOutRequestModel)
+    {
+        try
+        {
+            ErrorCode errorCode = await _authenticationDataAccess.LogOutAsync(logOutRequestModel.Token!)!;
+
+            if (errorCode == ErrorCode.InvalidAccessToken)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            return Ok();
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" }); ;
+        }
+    }
+
 }
