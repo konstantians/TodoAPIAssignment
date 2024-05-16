@@ -1,6 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using NSubstitute;
+using NSubstitute.ReturnsExtensions;
+using TodoAPIAssignment.AuthenticationLibrary.Enums;
 
 namespace TodoAPIAssignment.AuthenticationLibrary.Tests.UnitTests;
 
@@ -36,20 +39,55 @@ public class LogOutUnitTests
     [Test]
     public async Task LogOut_ShouldFailAndReturnErrorMessage_IfConfigurationNotSet()
     {
-        Assert.Fail();
+        //Arrange
+        _config["Jwt:Key"].ReturnsNull();
+        _config["Jwt:Issuer"].ReturnsNull();
+        _config["Jwt:Audience"].ReturnsNull();
+
+        //Act
+        ErrorCode result = await _authenticationDataAccess.LogOutAsync(_accessToken);
+
+        //Assert
+        result.Should().Be(ErrorCode.DatabaseError);
     }
 
     [Test]
     public async Task LogOut_ShouldFailAndReturnErrorMessage_IfInvalidAccessToken()
     {
-        Assert.Fail();
+        //Arrange
+
+        //Act
+        ErrorCode result = await _authenticationDataAccess.LogOutAsync("bogusToken");
+
+        //Assert
+        result.Should().Be(ErrorCode.InvalidAccessToken);
+    }
+
+    [Test]
+    public async Task LogOut_ShouldFailAndReturnErrorMessage_IfSameTokenIsUsedTwice()
+    {
+        //Arrange
+        await _authenticationDataAccess.LogOutAsync(_accessToken);
+
+        //Act
+        ErrorCode result = await _authenticationDataAccess.LogOutAsync(_accessToken);
+
+        //Assert
+        result.Should().Be(ErrorCode.InvalidAccessToken);
     }
 
     [Test]
     public async Task LogOut_ShouldSucceedAndUpdateTokenCounter()
     {
-        Assert.Fail();
+        //Arrange
+
+        //Act
+        ErrorCode result = await _authenticationDataAccess.LogOutAsync(_accessToken);
+
+        //Assert
+        result.Should().Be(ErrorCode.None);
     }
+    
 
     [TearDown]
     public void TearDown() 

@@ -70,9 +70,72 @@ public class AuthenticationDataAccess : IAuthenticationDataAccess
         }
     }
 
+    public async Task<ErrorCode> LogOutAsync(string accessToken)
+    {
+        try
+        {
+            AppUser? appUser = await CheckAndDecodeAccessTokenAsync(accessToken);
+            if (appUser is null)
+                return ErrorCode.InvalidAccessToken;
+
+            //black list all the other tokens
+            appUser!.AccessTokenCountId++;
+            await _authDbContext.SaveChangesAsync();
+
+            return ErrorCode.None;
+        }
+        catch (Exception)
+        {
+            return ErrorCode.DatabaseError;
+        }
+    }
+
+    //TODO maybe make it not return a tupple, but something more structured.
+    public async Task<AppUser?> CheckAndDecodeAccessTokenAsync(string accessToken)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+        var tokenHandler = new JwtSecurityTokenHandler();
+
+        try
+        {
+            tokenHandler.ValidateToken(accessToken, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _config["Jwt:Issuer"],
+                ValidAudience = _config["Jwt:Audience"],
+                IssuerSigningKey = key,
+                ClockSkew = TimeSpan.Zero
+            }, out SecurityToken validatedToken);
+            
+            //After this point just check the information. The relevant information is the userId, the username and the accessTokenCount
+            //Retrieve them and check that all are correct
+            var jwtToken = (JwtSecurityToken)validatedToken;
+            string userId = jwtToken.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            string username = jwtToken.Claims.First(x => x.Type == ClaimTypes.Name).Value;
+            int accessTokenCount = Convert.ToInt32(jwtToken.Claims.First(x => x.Type == "AccessTokenCount").Value);
+
+            AppUser? user = await _authDbContext.Users.FirstOrDefaultAsync(user => user.Username == username);
+            if (user is null || user.Id != userId || user.AccessTokenCountId != accessTokenCount)
+                return null;
+
+            return user;
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     private string GenerateToken(AppUser user)
     {
-        // Create claims for the user
+        // Create claims for the appUser
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id!),

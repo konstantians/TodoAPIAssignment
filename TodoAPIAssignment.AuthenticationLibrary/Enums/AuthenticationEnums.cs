@@ -6,5 +6,6 @@ public enum ErrorCode
     DatabaseError = 1,
     DuplicateUsername = 2,
     DuplicateEmail = 3,
-    InvalidCredentials = 4
+    InvalidCredentials = 4,
+    InvalidAccessToken = 5
 }
