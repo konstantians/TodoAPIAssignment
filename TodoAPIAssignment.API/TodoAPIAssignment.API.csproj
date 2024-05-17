@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TodoAPIAssignment.AuthenticationLibrary\TodoAPIAssignment.AuthenticationLibrary.csproj" />
+    <ProjectReference Include="..\TodoAPIAssignment.DataAccessLibrary\TodoAPIAssignment.DataAccessLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>

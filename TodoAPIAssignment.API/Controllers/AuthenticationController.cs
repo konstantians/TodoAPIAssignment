@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TodoAPIAssignment.API.Models.RequestModels;
+using TodoAPIAssignment.API.Models.AuthenticationControllerModels.RequestModels;
 using TodoAPIAssignment.AuthenticationLibrary;
 using TodoAPIAssignment.AuthenticationLibrary.Enums;
 using TodoAPIAssignment.AuthenticationLibrary.Models;
@@ -34,7 +34,7 @@ public class AuthenticationController : ControllerBase
         }
         catch (Exception)
         {
-            return StatusCode(500, new { ErrorMessage = "InternalServerError" }); ;
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
         }
     }
 
@@ -52,7 +52,7 @@ public class AuthenticationController : ControllerBase
         }
         catch (Exception)
         {
-            return StatusCode(500, new { ErrorMessage = "InternalServerError" }); ;
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
         }
     }
 
@@ -70,7 +70,7 @@ public class AuthenticationController : ControllerBase
         }
         catch (Exception)
         {
-            return StatusCode(500, new { ErrorMessage = "InternalServerError" }); ;
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
         }
     }
 

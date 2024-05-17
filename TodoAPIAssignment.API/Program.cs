@@ -1,4 +1,5 @@
 using TodoAPIAssignment.AuthenticationLibrary;
+using TodoAPIAssignment.DataAccessLibrary;
 
 namespace TodoAPIAssignment.API;
 
@@ -18,8 +19,11 @@ public class Program
 
         builder.Services.AddCosmos<AuthDbContext>(connectionString: configuration["CosmosDbConnectionString"]!,
             databaseName: "GlobalDb");
+        builder.Services.AddCosmos<DataDbContext>(connectionString: configuration["CosmosDbConnectionString"]!,
+            databaseName: "GlobalDb");
 
         builder.Services.AddScoped<IAuthenticationDataAccess, AuthenticationDataAccess>();
+        builder.Services.AddScoped<ITodoDataAccess, TodoDataAccess>();
 
         var app = builder.Build();
 

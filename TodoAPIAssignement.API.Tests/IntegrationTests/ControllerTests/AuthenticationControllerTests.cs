@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using TodoAPIAssignement.API.Tests.IntegrationTests.HelperMethods;
 using TodoAPIAssignment.API;
-using TodoAPIAssignment.API.Models.RequestModels;
+using TodoAPIAssignment.API.Models.AuthenticationControllerModels.RequestModels;
 
 namespace TodoAPIAssignement.API.Tests.IntegrationTests.ControllerTests;
 
