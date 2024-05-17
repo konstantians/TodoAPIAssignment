@@ -11,7 +11,7 @@ internal class ResetDatabaseHelperMethods
         CosmosClient cosmosClient = new CosmosClient(cosmosDbConnectionString);
         Database database = cosmosClient.GetDatabase("GlobalDb");
 
-        List<Container> containers = new() { database.GetContainer("TodosAssignment_Users") };
+        List<Container> containers = new() { database.GetContainer("TodosAssignment_Users"), database.GetContainer("TodosAssignment_Todos") };
 
         foreach (Container container in containers)
         {
