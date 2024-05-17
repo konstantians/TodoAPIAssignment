@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TodoAPIAssignment.API.Models.RequestModels;
+namespace TodoAPIAssignment.API.Models.AuthenticationControllerModels.RequestModels;
 
 public class LogOutRequestModel
 {
