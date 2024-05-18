@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using TodoAPIAssignement.API.Tests.IntegrationTests.HelperMethods;
@@ -51,8 +52,8 @@ internal class TodosControllerTests
         {
             Title = "MyTodo",
             IsDone = false,
-            Token = "BogusToken"
         };
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "BogusToken");
 
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos/", createTodoRequestModel);
@@ -72,8 +73,8 @@ internal class TodosControllerTests
         {
             Title = "MyTodo",
             IsDone = false,
-            Token = _accessToken
         };
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos/", createTodoRequestModel);
