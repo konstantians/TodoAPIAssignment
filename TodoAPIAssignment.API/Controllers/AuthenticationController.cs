@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using TodoAPIAssignment.API.Models.AuthenticationControllerModels.RequestModels;
 using TodoAPIAssignment.AuthenticationLibrary;
 using TodoAPIAssignment.AuthenticationLibrary.Enums;
@@ -57,11 +58,17 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("LogOut")]
-    public async Task<IActionResult> LogOut([FromBody] LogOutRequestModel logOutRequestModel)
+    public async Task<IActionResult> LogOut()
     {
         try
         {
-            ErrorCode errorCode = await _authenticationDataAccess.LogOutAsync(logOutRequestModel.Token!)!;
+            string authorizationHeader = Request.Headers["Authorization"]!;
+            if(authorizationHeader.IsNullOrEmpty() || !authorizationHeader.StartsWith("Bearer "))
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            string token = authorizationHeader.Substring("Bearer ".Length).Trim();
+
+            ErrorCode errorCode = await _authenticationDataAccess.LogOutAsync(token)!;
 
             if (errorCode == ErrorCode.InvalidAccessToken)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });

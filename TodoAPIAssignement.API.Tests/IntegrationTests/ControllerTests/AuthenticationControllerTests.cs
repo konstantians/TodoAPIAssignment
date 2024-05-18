@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using TodoAPIAssignement.API.Tests.IntegrationTests.HelperMethods;
@@ -140,13 +141,10 @@ public class AuthenticationControllerTests
     public async Task LogOut_ShouldFailAndReturnBadRequest_IfInvalidAccessToken()
     {
         //Arrange
-        LogOutRequestModel logOutRequestModel = new LogOutRequestModel()
-        {
-            Token = "bogusToken"
-        };
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
 
         //Act
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", logOutRequestModel);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", new {});
         string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
 
         //Assert
@@ -159,14 +157,11 @@ public class AuthenticationControllerTests
     public async Task LogOut_ShouldLogOutUserAndReturnOk()
     {
         //Arrange
-        LogOutRequestModel logOutRequestModel = new LogOutRequestModel()
-        {
-            Token = _accessToken
-        };
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
         //Act
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", logOutRequestModel);
-
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", new {});
+         
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -175,13 +170,10 @@ public class AuthenticationControllerTests
     public async Task LogOut_ShouldFailAndReturnBadRequest_IfSameAccessTokenIsUsedAfterLogOut()
     {
         //Arrange
-        LogOutRequestModel logOutRequestModel = new LogOutRequestModel()
-        {
-            Token = _accessToken
-        };
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
         //Act
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", logOutRequestModel);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/authentication/logout", new {});
         string? errorMessageValue = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
 
         //Assert

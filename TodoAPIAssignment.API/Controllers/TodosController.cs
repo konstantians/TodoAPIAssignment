@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using TodoAPIAssignment.API.Models.TodoControllerModels.RequestModels;
 using TodoAPIAssignment.AuthenticationLibrary;
 using TodoAPIAssignment.AuthenticationLibrary.Models;
@@ -25,7 +26,13 @@ public class TodosController : ControllerBase
     {
         try
         {
-            AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(createTodoRequestModel.Token!);
+            string authorizationHeader = Request.Headers["Authorization"]!;
+            if (authorizationHeader.IsNullOrEmpty() || !authorizationHeader.StartsWith("Bearer "))
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            string token = authorizationHeader.Substring("Bearer ".Length).Trim(); //Or substring 7, this just removes the Bearer word from the token
+
+            AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
             if(appUser is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
 
