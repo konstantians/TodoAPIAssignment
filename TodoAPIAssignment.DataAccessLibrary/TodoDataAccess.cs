@@ -1,4 +1,5 @@
-﻿using TodoAPIAssignment.DataAccessLibrary.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 
 namespace TodoAPIAssignment.DataAccessLibrary;
@@ -26,6 +27,19 @@ public class TodoDataAccess : ITodoDataAccess
         catch (Exception)
         {
             return new CreateTodoResult() { ErrorCode = ErrorCode.DatabaseError, Todo = null };
+        }
+    }
+
+    public async Task<GetTodosResult> GetUserTodosAsync(string userId)
+    {
+        try
+        {
+           List<Todo> userTodos = await _dataDbContext.Todos.Where(todo => todo.UserId == userId).ToListAsync();
+           return new GetTodosResult() { ErrorCode = ErrorCode.None, Todos = userTodos};
+        }
+        catch (Exception)
+        {
+            return new GetTodosResult() { ErrorCode = ErrorCode.DatabaseError, Todos = new List<Todo>() };
         }
     }
 }

@@ -1,9 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
+using TodoAPIAssignment.DataAccessLibrary.Models;
 
 namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests;
 
@@ -17,7 +15,7 @@ public class GetTodosUnitTests
     private TodoDataAccess _todoDataAccess;
 
     [SetUp]
-    public void Setup()
+    public void SeTup()
     {
         var options = new DbContextOptionsBuilder<DataDbContext>()
         .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -30,13 +28,44 @@ public class GetTodosUnitTests
     [Test]
     public async Task GetTodos_ShouldSucceedAndReturnNoTodos_IfUserHasNone()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+
+        //Act
+        GetTodosResult getTodosResult = await _todoDataAccess.GetUserTodosAsync(userId);
+
+        //Assert
+        getTodosResult.Should().NotBeNull();
+        getTodosResult.ErrorCode.Should().Be(ErrorCode.None);
+        getTodosResult.Todos.Should().HaveCount(0);
     }
 
     [Test]
     public async Task GetTodos_ShouldSucceedAndReturnTodos()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+        Todo todo = new Todo
+        {
+            Title = "MyTodo",
+            UserId = "1",
+            IsDone = false
+        };
+        await _todoDataAccess.CreateTodoAsync(todo);
+
+        //Act
+        GetTodosResult getTodosResult = await _todoDataAccess.GetUserTodosAsync(userId);
+
+        //Assert
+        getTodosResult.Should().NotBeNull();
+        getTodosResult.ErrorCode.Should().Be(ErrorCode.None);
+        getTodosResult.Todos.Should().HaveCount(1);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+
     }
 
 }

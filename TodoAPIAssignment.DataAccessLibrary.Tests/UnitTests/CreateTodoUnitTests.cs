@@ -15,7 +15,7 @@ public class CreateTodoUnitTests
     private TodoDataAccess _todoDataAccess;
 
     [SetUp]
-    public void Setup()
+    public void SetUp()
     {
         var options = new DbContextOptionsBuilder<DataDbContext>()
         .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -47,7 +47,7 @@ public class CreateTodoUnitTests
     }
 
     [TearDown]
-    public void Teardown() 
+    public void TearDown() 
     { 
     
     }
