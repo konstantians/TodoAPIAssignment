@@ -42,4 +42,17 @@ public class TodoDataAccess : ITodoDataAccess
             return new GetTodosResult() { ErrorCode = ErrorCode.DatabaseError, Todos = new List<Todo>() };
         }
     }
+
+    public async Task<GetTodoResult> GetUserTodoAsync(string userId, string todoId)
+    {
+        try
+        {
+            Todo? userTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
+            return new GetTodoResult() { ErrorCode = ErrorCode.None, Todo = userTodo };
+        }
+        catch (Exception)
+        {
+            return new GetTodoResult() { ErrorCode = ErrorCode.DatabaseError, Todo = null };
+        }
+    }
 }
