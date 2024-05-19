@@ -16,7 +16,7 @@ namespace TodoAPIAssignement.API.Tests.IntegrationTests.ControllerTests;
 [TestFixture]
 [Category("Integration")]
 [Author("konstantinos", "kinnaskonstantinos0@gmail.com")]
-internal class TodosControllerTests
+public class TodosControllerTests
 {
     private HttpClient httpClient;
     private string? _accessToken;
@@ -56,7 +56,7 @@ internal class TodosControllerTests
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "BogusToken");
 
         //Act
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos/", createTodoRequestModel);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos", createTodoRequestModel);
         string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
 
         //Assert
@@ -77,7 +77,7 @@ internal class TodosControllerTests
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
         //Act
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos/", createTodoRequestModel);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos", createTodoRequestModel);
         string? responseBody = await response.Content.ReadAsStringAsync();
         Todo? todo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true});
 
@@ -86,6 +86,40 @@ internal class TodosControllerTests
         response.Headers.Location.Should().NotBeNull();
         todo.Should().NotBeNull();
         todo!.Title.Should().Be("MyTodo");
+    }
+
+    [Test, Order(3)]
+    public async Task GetTodos_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "BogusToken");
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync("api/todos");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(4)]
+    public async Task GetTodos_ShouldReturnOkAndTodos()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync("api/todos");
+        string? responseBody = await response.Content.ReadAsStringAsync();
+        List<Todo>? todos = JsonSerializer.Deserialize<List<Todo>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        todos.Should().NotBeNull();
+        todos.Should().HaveCount(1);
+        todos!.FirstOrDefault()!.Title.Should().Be("MyTodo");
     }
 
     [TearDown]
