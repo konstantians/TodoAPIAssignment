@@ -20,6 +20,7 @@ public class TodosControllerTests
 {
     private HttpClient httpClient;
     private string? _accessToken;
+    private Todo _testTodo;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -53,7 +54,7 @@ public class TodosControllerTests
             Title = "MyTodo",
             IsDone = false,
         };
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "BogusToken");
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
 
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos", createTodoRequestModel);
@@ -79,20 +80,20 @@ public class TodosControllerTests
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos", createTodoRequestModel);
         string? responseBody = await response.Content.ReadAsStringAsync();
-        Todo? todo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true});
+        _testTodo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true});
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         response.Headers.Location.Should().NotBeNull();
-        todo.Should().NotBeNull();
-        todo!.Title.Should().Be("MyTodo");
+        _testTodo.Should().NotBeNull();
+        _testTodo!.Title.Should().Be("MyTodo");
     }
 
     [Test, Order(3)]
     public async Task GetTodos_ShouldReturnInvalidTokenError_IfTokenNotValid()
     {
         //Arrange
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "BogusToken");
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
 
         //Act
         HttpResponseMessage response = await httpClient.GetAsync("api/todos");
@@ -120,6 +121,56 @@ public class TodosControllerTests
         todos.Should().NotBeNull();
         todos.Should().HaveCount(1);
         todos!.FirstOrDefault()!.Title.Should().Be("MyTodo");
+    }
+
+    [Test, Order(5)]
+    public async Task GetTodo_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
+        string todoId = _testTodo.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(6)]
+    public async Task GetTodo_ShouldReturnNotFound_IfTokenNotFoundOrDoesNotBelongToUser()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string bogusTodoId = "bogusTodoId";
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{bogusTodoId}");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Test, Order(7)]
+    public async Task GetTodo_ShouldReturnOkAndTodo()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}");
+        string? responseBody = await response.Content.ReadAsStringAsync();
+        Todo? todo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        todo.Should().NotBeNull();
+        todo!.Id.Should().Be(_testTodo.Id);
     }
 
     [TearDown]
