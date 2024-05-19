@@ -2,8 +2,8 @@
 
 namespace TodoAPIAssignment.DataAccessLibrary.Models;
 
-public class CreateTodoResult
+public class GetTodosResult
 {
-    public Todo? Todo { get; set; }
+    public List<Todo>? Todos { get; set; }
     public ErrorCode ErrorCode { get; set; }
 }
