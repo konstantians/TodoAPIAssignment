@@ -7,5 +7,6 @@ namespace TodoAPIAssignment.DataAccessLibrary
         Task<CreateTodoResult> CreateTodoAsync(Todo todo);
         Task<GetTodoResult> GetUserTodoAsync(string userId, string todoId);
         Task<GetTodosResult> GetUserTodosAsync(string userId);
+        Task<UpdateTodoResult> UpdateUserTodoAsync(Todo updatedTodo);
     }
 }
