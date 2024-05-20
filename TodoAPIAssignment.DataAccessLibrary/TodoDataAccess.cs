@@ -78,4 +78,23 @@ public class TodoDataAccess : ITodoDataAccess
             return new UpdateTodoResult() { ErrorCode = ErrorCode.DatabaseError, Todo = null };
         }
     }
+
+    public async Task<ErrorCode> DeleteUserTodoAsync(string userId, string todoId)
+    {
+        try
+        {
+            Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
+            if (foundTodo is null)
+                return ErrorCode.NotFound;
+
+            _dataDbContext.Todos.Remove(foundTodo);
+            await _dataDbContext.SaveChangesAsync();
+
+            return ErrorCode.None;
+        }
+        catch (Exception)
+        {
+            return ErrorCode.DatabaseError;
+        }
+    }
 }

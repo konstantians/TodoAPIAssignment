@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 
 namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests;
@@ -29,19 +31,42 @@ public class DeleteTodoUnitTests
     [Test]
     public async Task DeleteTodo_ShouldReturnNullAndNotFoundError_IfTodoNotFound()
     {
-        Assert.Fail();
+        //Arrange
+        string bogusTodoId = "bogusTodoId";
+
+        //Act
+        ErrorCode result = await _todoDataAccess.DeleteUserTodoAsync("1", bogusTodoId);
+
+        //Assert
+        result.Should().Be(ErrorCode.NotFound);
     }
 
     [Test]
     public async Task DeleteTodo_ShouldReturnNullAndNotFoundError_IfTodoExistsButUserDoesNotOwnIt()
     {
-        Assert.Fail();
+        //Arrange
+        string bogusUserId = "bogusUserId";
+
+        //Act
+        ErrorCode result = await _todoDataAccess.DeleteUserTodoAsync(bogusUserId, _testTodo!.Id!);
+
+        //Assert
+        result.Should().Be(ErrorCode.NotFound);
     }
 
     [Test]
     public async Task DeleteTodo_ShouldSucceedAndDeleteTodo()
     {
-        Assert.Fail();
+
+        //Arrange
+        string userId = "1";
+        string todoId = _testTodo!.Id!;
+
+        //Act
+        ErrorCode result = await _todoDataAccess.DeleteUserTodoAsync(userId, todoId);
+
+        //Assert
+        result.Should().Be(ErrorCode.None);
     }
 
     [TearDown]
