@@ -13,7 +13,7 @@ public class GetTodoByIdUnitTests
 {
     private DataDbContext _dataDbContext;
     private TodoDataAccess _todoDataAccess;
-    private Todo? _testTodo;
+    private Todo _testTodo;
 
     [SetUp]
     public async Task SetUp()
@@ -26,11 +26,11 @@ public class GetTodoByIdUnitTests
         _todoDataAccess = new TodoDataAccess(_dataDbContext);
 
         CreateTodoResult result = await _todoDataAccess.CreateTodoAsync(new Todo() { Title = "MyTodo", IsDone = false, UserId = "1" });
-        _testTodo = result.Todo;
+        _testTodo = result.Todo!;
     }
 
     [Test]
-    public async Task GetTodoById_ShouldReturnNull_IfTodoNotFound()
+    public async Task GetTodoById_ShouldReturnNullAndNotFoundMessage_IfTodoNotFound()
     {
         //Arrange
         string bogusTodoId = "bogusTodoId";
@@ -41,12 +41,12 @@ public class GetTodoByIdUnitTests
 
         //Assert
         result.Should().NotBeNull();
-        result.ErrorCode.Should().Be(ErrorCode.None);
+        result.ErrorCode.Should().Be(ErrorCode.NotFound);
         result.Todo.Should().BeNull();
     }
 
     [Test]
-    public async Task GetTodoById_ShouldReturnNull_IfTodoExistsButUserDoesNotOwnIt()
+    public async Task GetTodoById_ShouldReturnNullAndNotFoundMessage_IfTodoExistsButUserDoesNotOwnIt()
     {
         //Arrange
         string todoId = _testTodo!.Id!;
@@ -57,7 +57,7 @@ public class GetTodoByIdUnitTests
 
         //Assert
         result.Should().NotBeNull();
-        result.ErrorCode.Should().Be(ErrorCode.None);
+        result.ErrorCode.Should().Be(ErrorCode.NotFound);
         result.Todo.Should().BeNull();
     }
 

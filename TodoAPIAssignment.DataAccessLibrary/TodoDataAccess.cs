@@ -47,12 +47,35 @@ public class TodoDataAccess : ITodoDataAccess
     {
         try
         {
-            Todo? userTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
-            return new GetTodoResult() { ErrorCode = ErrorCode.None, Todo = userTodo };
+            Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
+            if (foundTodo is null)
+                return new GetTodoResult() { ErrorCode = ErrorCode.NotFound, Todo = null };
+            
+            return new GetTodoResult() { ErrorCode = ErrorCode.None, Todo = foundTodo };
         }
         catch (Exception)
         {
             return new GetTodoResult() { ErrorCode = ErrorCode.DatabaseError, Todo = null };
+        }
+    }
+
+    public async Task<UpdateTodoResult> UpdateUserTodoAsync(Todo updatedTodo)
+    {
+        try
+        {
+            Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == updatedTodo.UserId && todo.Id == updatedTodo.Id);
+            if(foundTodo is null)
+                return new UpdateTodoResult() { ErrorCode = ErrorCode.NotFound, Todo = null };
+
+            foundTodo.Title = updatedTodo.Title;
+            foundTodo.IsDone = updatedTodo.IsDone;
+            await _dataDbContext.SaveChangesAsync();
+
+            return new UpdateTodoResult() { ErrorCode = ErrorCode.None, Todo = foundTodo };
+        }
+        catch (Exception)
+        {
+            return new UpdateTodoResult() { ErrorCode = ErrorCode.DatabaseError, Todo = null };
         }
     }
 }

@@ -103,7 +103,7 @@ public class TodosController : ControllerBase
             if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            if (getTodosResult.Todo is null)
+            if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.NotFound)
                 return NotFound();
 
             return Ok(getTodosResult.Todo);
