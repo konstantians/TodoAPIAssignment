@@ -184,7 +184,7 @@ public class TodosControllerTests
         };
 
         //Act
-        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos", updateTodoRequestModel);
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync("api/todos", updateTodoRequestModel);
         string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
 
         //Assert
@@ -206,7 +206,7 @@ public class TodosControllerTests
         };
 
         //Act
-        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos", updateTodoRequestModel);
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync("api/todos", updateTodoRequestModel);
 
         //Assert
         response.Should().NotBeNull();
@@ -227,7 +227,7 @@ public class TodosControllerTests
         };
 
         //Act
-        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos", updateTodoRequestModel);
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync("api/todos", updateTodoRequestModel);
         string? responseBody = await response.Content.ReadAsStringAsync();
         Todo? todo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
@@ -236,6 +236,56 @@ public class TodosControllerTests
         todo.Should().NotBeNull();
         todo!.Id.Should().Be(_testTodo.Id);
         todo!.Title.Should().Be(updatedTitle);
+    }
+
+    [Test, Order(11)]
+    public async Task DeleteTodo_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
+        string todoId = _testTodo!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{todoId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(12)]
+    public async Task DeleteTodo_ShouldReturnNotFound_IfTodoNotFoundOrDoesNotBelongToUser()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string bogusTodoId = "bogusTodoId";
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{bogusTodoId}");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Test, Order(13)]
+    public async Task Delete_ShouldReturnNoContentAndDeleteTodo()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{todoId}");
+        HttpResponseMessage responseAfterDeletion = await httpClient.GetAsync($"api/todos/{todoId}");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        responseAfterDeletion.Should().NotBeNull();
+        responseAfterDeletion.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [TearDown]

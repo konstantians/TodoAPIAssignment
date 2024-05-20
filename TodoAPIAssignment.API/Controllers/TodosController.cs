@@ -46,9 +46,8 @@ public class TodosController : ControllerBase
             if(createTodoResult.ErrorCode == ErrorCode.DatabaseError)                
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            //TODO change that when I create the getTodoById method
-            var locationUri = $"https://localhost:7279/api/todos/{createTodoResult.Todo!.Id}";
-            return Created(locationUri, createTodoResult.Todo);
+            //, 
+            return CreatedAtAction(nameof(GetTodo), new { todoId = createTodoResult.Todo!.Id }, createTodoResult.Todo);
         }
         catch (Exception)
         {
