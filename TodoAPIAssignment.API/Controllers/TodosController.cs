@@ -4,6 +4,7 @@ using TodoAPIAssignment.API.Models.TodoControllerModels.RequestModels;
 using TodoAPIAssignment.AuthenticationLibrary;
 using TodoAPIAssignment.AuthenticationLibrary.Models;
 using TodoAPIAssignment.DataAccessLibrary;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 
 namespace TodoAPIAssignment.API.Controllers;
@@ -26,11 +27,9 @@ public class TodosController : ControllerBase
     {
         try
         {
-            string authorizationHeader = Request.Headers["Authorization"]!;
-            if (authorizationHeader.IsNullOrEmpty() || !authorizationHeader.StartsWith("Bearer "))
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
-
-            string token = authorizationHeader.Substring("Bearer ".Length).Trim(); //Or substring 7, this just removes the Bearer word from the token
 
             AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
             if(appUser is null)
@@ -44,7 +43,7 @@ public class TodosController : ControllerBase
             };
 
             CreateTodoResult createTodoResult = await _todoDataAccess.CreateTodoAsync(todo);
-            if(createTodoResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.DatabaseError)                
+            if(createTodoResult.ErrorCode == ErrorCode.DatabaseError)                
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
             //TODO change that when I create the getTodoById method
@@ -62,18 +61,16 @@ public class TodosController : ControllerBase
     {
         try
         {
-            string authorizationHeader = Request.Headers["Authorization"]!;
-            if (authorizationHeader.IsNullOrEmpty() || !authorizationHeader.StartsWith("Bearer "))
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
-
-            string token = authorizationHeader.Substring("Bearer ".Length).Trim(); //Or substring 7, this just removes the Bearer word from the token
 
             AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
             if (appUser is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
             
             GetTodosResult getTodosResult = await _todoDataAccess.GetUserTodosAsync(appUser.Id!);
-            if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.DatabaseError)
+            if (getTodosResult.ErrorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
             return Ok(getTodosResult.Todos);
@@ -89,24 +86,22 @@ public class TodosController : ControllerBase
     {
         try
         {
-            string authorizationHeader = Request.Headers["Authorization"]!;
-            if (authorizationHeader.IsNullOrEmpty() || !authorizationHeader.StartsWith("Bearer "))
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
-
-            string token = authorizationHeader.Substring("Bearer ".Length).Trim(); //Or substring 7, this just removes the Bearer word from the token
 
             AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
             if (appUser is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
 
-            GetTodoResult getTodosResult = await _todoDataAccess.GetUserTodoAsync(appUser.Id!, todoId);
-            if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.DatabaseError)
+            GetTodoResult getTodoResult = await _todoDataAccess.GetUserTodoAsync(appUser.Id!, todoId);
+            if (getTodoResult.ErrorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.NotFound)
+            if (getTodoResult.ErrorCode == ErrorCode.NotFound)
                 return NotFound();
 
-            return Ok(getTodosResult.Todo);
+            return Ok(getTodoResult.Todo);
         }
         catch (Exception)
         {
@@ -119,11 +114,9 @@ public class TodosController : ControllerBase
     {
         try
         {
-            string authorizationHeader = Request.Headers["Authorization"]!;
-            if (authorizationHeader.IsNullOrEmpty() || !authorizationHeader.StartsWith("Bearer "))
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
                 return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
-
-            string token = authorizationHeader.Substring("Bearer ".Length).Trim(); //Or substring 7, this just removes the Bearer word from the token
 
             AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
             if (appUser is null)
@@ -137,18 +130,55 @@ public class TodosController : ControllerBase
                 UserId = appUser.Id
             };
 
-            UpdateTodoResult getTodosResult = await _todoDataAccess.UpdateUserTodoAsync(updatedTodo);
-            if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.DatabaseError)
+            UpdateTodoResult updateTodoResult = await _todoDataAccess.UpdateUserTodoAsync(updatedTodo);
+            if (updateTodoResult.ErrorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            if (getTodosResult.ErrorCode == DataAccessLibrary.Enums.ErrorCode.NotFound)
+            if (updateTodoResult.ErrorCode == ErrorCode.NotFound)
                 return NotFound();
 
-            return Ok(getTodosResult.Todo);
+            return Ok(updateTodoResult.Todo);
         }
         catch (Exception)
         {
             return StatusCode(500, new { ErrorMessage = "InternalServerError" });
         }
+    }
+
+    [HttpDelete("{todoId}")]
+    public async Task<IActionResult> DeleteTodo(string todoId)
+    {
+        try
+        {
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
+            if (appUser is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            ErrorCode errorCode = await _todoDataAccess.DeleteUserTodoAsync(appUser.Id!, todoId);
+            if (errorCode == ErrorCode.DatabaseError)
+                return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+
+            if (errorCode == ErrorCode.NotFound)
+                return NotFound();
+
+            return NoContent();
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+        }
+    }
+
+    private string? ExtractTokenFromHeader(string header)
+    {
+        if (header.IsNullOrEmpty() || !header.StartsWith("Bearer "))
+            return null;
+
+        string token = header.Substring("Bearer ".Length).Trim();
+        return token;
     }
 }
