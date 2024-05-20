@@ -3,5 +3,6 @@
 public enum ErrorCode
 {
     None = 0,
-    DatabaseError = 1
+    NotFound = 1,
+    DatabaseError = 2
 }
