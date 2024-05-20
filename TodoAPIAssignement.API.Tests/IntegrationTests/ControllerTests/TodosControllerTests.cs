@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -20,7 +19,7 @@ public class TodosControllerTests
 {
     private HttpClient httpClient;
     private string? _accessToken;
-    private Todo _testTodo;
+    private Todo? _testTodo;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -31,7 +30,7 @@ public class TodosControllerTests
         SignUpRequestModel signUpRequestModel = new SignUpRequestModel()
         {
             Email = "kinnaskonstantinos0@gmail.com",
-            Username = "differentUsername",
+            Username = "konstantinos",
             Password = "password"
         };
         
@@ -80,7 +79,7 @@ public class TodosControllerTests
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("api/todos", createTodoRequestModel);
         string? responseBody = await response.Content.ReadAsStringAsync();
-        _testTodo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true});
+        _testTodo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true})!;
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -128,7 +127,7 @@ public class TodosControllerTests
     {
         //Arrange
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
-        string todoId = _testTodo.Id!;
+        string todoId = _testTodo!.Id!;
 
         //Act
         HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}");
@@ -141,7 +140,7 @@ public class TodosControllerTests
     }
 
     [Test, Order(6)]
-    public async Task GetTodo_ShouldReturnNotFound_IfTokenNotFoundOrDoesNotBelongToUser()
+    public async Task GetTodo_ShouldReturnNotFound_IfTodoNotFoundOrDoesNotBelongToUser()
     {
         //Arrange
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
@@ -160,7 +159,7 @@ public class TodosControllerTests
     {
         //Arrange
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        string todoId = _testTodo.Id!;
+        string todoId = _testTodo!.Id!;
 
         //Act
         HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}");
@@ -171,6 +170,72 @@ public class TodosControllerTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         todo.Should().NotBeNull();
         todo!.Id.Should().Be(_testTodo.Id);
+    }
+
+    [Test, Order(8)]
+    public async Task UpdateTodo_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
+        UpdateTodoRequestModel updateTodoRequestModel = new UpdateTodoRequestModel() { 
+            Id = _testTodo!.Id!, 
+            Title = "TodoUpdatedTitle",
+            IsDone = true
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos", updateTodoRequestModel);
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(9)]
+    public async Task UpdateTodo_ShouldReturnNotFound_IfTodoNotFoundOrDoesNotBelongToUser()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        UpdateTodoRequestModel updateTodoRequestModel = new UpdateTodoRequestModel()
+        {
+            Id = "bogusTodoId",
+            Title = "TodoUpdatedTitle",
+            IsDone = true
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos", updateTodoRequestModel);
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Test, Order(10)]
+    public async Task UpdateTodo_ShouldReturnOkAndUpdatedTodo()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string updatedTitle = "TodoUpdatedTitle";
+        UpdateTodoRequestModel updateTodoRequestModel = new UpdateTodoRequestModel()
+        {
+            Id = _testTodo!.Id!,
+            Title = updatedTitle,
+            IsDone = true
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos", updateTodoRequestModel);
+        string? responseBody = await response.Content.ReadAsStringAsync();
+        Todo? todo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        todo.Should().NotBeNull();
+        todo!.Id.Should().Be(_testTodo.Id);
+        todo!.Title.Should().Be(updatedTitle);
     }
 
     [TearDown]
