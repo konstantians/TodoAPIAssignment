@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
+using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests.TodoUnitTests;
 
@@ -38,7 +39,7 @@ public class DeleteTodoUnitTests
         ErrorCode result = await _todoDataAccess.DeleteUserTodoAsync("1", bogusTodoId);
 
         //Assert
-        result.Should().Be(ErrorCode.NotFound);
+        result.Should().Be(ErrorCode.TodoNotFound);
     }
 
     [Test]
@@ -51,7 +52,7 @@ public class DeleteTodoUnitTests
         ErrorCode result = await _todoDataAccess.DeleteUserTodoAsync(bogusUserId, _testTodo!.Id!);
 
         //Assert
-        result.Should().Be(ErrorCode.NotFound);
+        result.Should().Be(ErrorCode.TodoNotFound);
     }
 
     [Test]

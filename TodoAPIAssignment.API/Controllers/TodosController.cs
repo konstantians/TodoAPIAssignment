@@ -6,6 +6,7 @@ using TodoAPIAssignment.AuthenticationLibrary.Models;
 using TodoAPIAssignment.DataAccessLibrary;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
+using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 namespace TodoAPIAssignment.API.Controllers;
 
@@ -97,7 +98,7 @@ public class TodosController : ControllerBase
             if (getTodoResult.ErrorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            if (getTodoResult.ErrorCode == ErrorCode.NotFound)
+            if (getTodoResult.ErrorCode == ErrorCode.TodoNotFound)
                 return NotFound();
 
             return Ok(getTodoResult.Todo);
@@ -133,7 +134,7 @@ public class TodosController : ControllerBase
             if (updateTodoResult.ErrorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            if (updateTodoResult.ErrorCode == ErrorCode.NotFound)
+            if (updateTodoResult.ErrorCode == ErrorCode.TodoNotFound)
                 return NotFound();
 
             return Ok(updateTodoResult.Todo);
@@ -161,7 +162,7 @@ public class TodosController : ControllerBase
             if (errorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            if (errorCode == ErrorCode.NotFound)
+            if (errorCode == ErrorCode.TodoNotFound)
                 return NotFound();
 
             return NoContent();

@@ -1,6 +1,6 @@
 ﻿using TodoAPIAssignment.DataAccessLibrary.Enums;
 
-namespace TodoAPIAssignment.DataAccessLibrary.Models;
+namespace TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 public class GetTodosResult
 {

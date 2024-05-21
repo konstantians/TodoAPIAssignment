@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
+using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests.TodoUnitTests;
 
@@ -41,7 +42,7 @@ public class GetTodoByIdUnitTests
 
         //Assert
         result.Should().NotBeNull();
-        result.ErrorCode.Should().Be(ErrorCode.NotFound);
+        result.ErrorCode.Should().Be(ErrorCode.TodoNotFound);
         result.Todo.Should().BeNull();
     }
 
@@ -57,7 +58,7 @@ public class GetTodoByIdUnitTests
 
         //Assert
         result.Should().NotBeNull();
-        result.ErrorCode.Should().Be(ErrorCode.NotFound);
+        result.ErrorCode.Should().Be(ErrorCode.TodoNotFound);
         result.Todo.Should().BeNull();
     }
 
