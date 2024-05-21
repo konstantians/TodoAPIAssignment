@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 
-namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests;
+namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests.TodoUnitTests;
 
 [TestFixture]
 [Category("Unit")]
@@ -47,8 +47,8 @@ public class CreateTodoUnitTests
     }
 
     [TearDown]
-    public void TearDown() 
-    { 
-    
+    public void TearDown()
+    {
+
     }
 }

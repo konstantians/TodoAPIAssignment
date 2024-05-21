@@ -3,16 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 
-namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests;
+namespace TodoAPIAssignment.DataAccessLibrary.Tests.UnitTests.TodoUnitTests;
 
 [TestFixture]
 [Category("Unit")]
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 [Author("konstantinos", "kinnaskonstantinos0@gmail.com")]
-public class UpdateTodoUnitTests
+public class GetTodoByIdUnitTests
 {
-    private TodoDataAccess _todoDataAccess;
     private DataDbContext _dataDbContext;
+    private TodoDataAccess _todoDataAccess;
     private Todo _testTodo;
 
     [SetUp]
@@ -24,24 +24,20 @@ public class UpdateTodoUnitTests
 
         _dataDbContext = new DataDbContext(options);
         _todoDataAccess = new TodoDataAccess(_dataDbContext);
+
         CreateTodoResult result = await _todoDataAccess.CreateTodoAsync(new Todo() { Title = "MyTodo", IsDone = false, UserId = "1" });
         _testTodo = result.Todo!;
     }
 
     [Test]
-    public async Task UpdateTodo_ShouldReturnNullAndNotFoundError_IfTodoNotFound()
+    public async Task GetTodoById_ShouldReturnNullAndNotFoundMessage_IfTodoNotFound()
     {
         //Arrange
-        Todo updatedTodo = new Todo()
-        {
-            Id = "bogusTodoId",
-            Title = "updatedTitle",
-            IsDone = true,
-            UserId = "1"
-        };
+        string bogusTodoId = "bogusTodoId";
+        string userId = "1";
 
         //Act
-        UpdateTodoResult result = await _todoDataAccess.UpdateUserTodoAsync(updatedTodo);
+        GetTodoResult result = await _todoDataAccess.GetUserTodoAsync(userId, bogusTodoId);
 
         //Assert
         result.Should().NotBeNull();
@@ -50,19 +46,14 @@ public class UpdateTodoUnitTests
     }
 
     [Test]
-    public async Task UpdateTodo_ShouldReturnNullAndNotFoundError_IfTodoExistsButUserDoesNotOwnIt()
+    public async Task GetTodoById_ShouldReturnNullAndNotFoundMessage_IfTodoExistsButUserDoesNotOwnIt()
     {
         //Arrange
-        Todo updatedTodo = new Todo()
-        {
-            Id = _testTodo.Id,
-            Title = "updatedTitle",
-            IsDone = true,
-            UserId = "bogusUserId"
-        };
+        string todoId = _testTodo!.Id!;
+        string bogusUserId = "bogusUserId";
 
         //Act
-        UpdateTodoResult result = await _todoDataAccess.UpdateUserTodoAsync(updatedTodo);
+        GetTodoResult result = await _todoDataAccess.GetUserTodoAsync(bogusUserId, todoId);
 
         //Assert
         result.Should().NotBeNull();
@@ -71,32 +62,26 @@ public class UpdateTodoUnitTests
     }
 
     [Test]
-    public async Task UpdateTodo_ShouldSucceedAndUpdateTodo()
+    public async Task GetTodoById_ShouldReturnTodo()
     {
         //Arrange
-        string updatedTitle = "updatedTitle";
-        Todo updatedTodo = new Todo()
-        {
-            Id = _testTodo.Id,
-            Title = updatedTitle,
-            IsDone = true,
-            UserId = _testTodo.UserId
-        };
+        string todoId = _testTodo!.Id!;
+        string userId = "1";
 
         //Act
-        UpdateTodoResult result = await _todoDataAccess.UpdateUserTodoAsync(updatedTodo);
+        GetTodoResult result = await _todoDataAccess.GetUserTodoAsync(userId, todoId);
 
         //Assert
         result.Should().NotBeNull();
         result.ErrorCode.Should().Be(ErrorCode.None);
         result.Todo.Should().NotBeNull();
-        result.Todo!.UserId.Should().Be(_testTodo.UserId);
-        result.Todo!.Title.Should().Be(updatedTitle);
+        result!.Todo!.Id.Should().Be(todoId);
+        result!.Todo!.UserId.Should().Be(userId);
     }
 
     [TearDown]
-    public void TearDown() 
-    { 
-    
+    public void TearDown()
+    {
+
     }
 }
