@@ -23,6 +23,7 @@ public class Program
             databaseName: "GlobalDb");
 
         builder.Services.AddScoped<IAuthenticationDataAccess, AuthenticationDataAccess>();
+        builder.Services.AddScoped<ITodoItemDataAccess, TodoItemDataAccess>();
         builder.Services.AddScoped<ITodoDataAccess, TodoDataAccess>();
 
         var app = builder.Build();
