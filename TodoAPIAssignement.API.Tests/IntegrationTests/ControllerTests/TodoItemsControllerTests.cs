@@ -91,7 +91,7 @@ public class TodoItemsControllerTests
     }
 
     [Test, Order(3)]
-    public async Task CreateTodo_ShouldSucceedAndReturnTodoAndLocation()
+    public async Task CreateTodoItem_ShouldSucceedAndReturnTodoItemAndLocation()
     {
         //Arrange
         CreateTodoItemRequestModel createTodoRequestModel = new CreateTodoItemRequestModel()
