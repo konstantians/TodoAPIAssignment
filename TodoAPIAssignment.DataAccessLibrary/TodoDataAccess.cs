@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
+using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 namespace TodoAPIAssignment.DataAccessLibrary;
 
@@ -19,7 +20,7 @@ public class TodoDataAccess : ITodoDataAccess
         {
             todo.Id = Guid.NewGuid().ToString();
             todo.CreatedAt = DateTime.Now;
-            await _dataDbContext.AddAsync(todo);
+            await _dataDbContext.Todos.AddAsync(todo);
 
             await _dataDbContext.SaveChangesAsync();
             return new CreateTodoResult() { ErrorCode = ErrorCode.None, Todo = todo };
@@ -49,7 +50,7 @@ public class TodoDataAccess : ITodoDataAccess
         {
             Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
             if (foundTodo is null)
-                return new GetTodoResult() { ErrorCode = ErrorCode.NotFound, Todo = null };
+                return new GetTodoResult() { ErrorCode = ErrorCode.TodoNotFound, Todo = null };
             
             return new GetTodoResult() { ErrorCode = ErrorCode.None, Todo = foundTodo };
         }
@@ -65,7 +66,7 @@ public class TodoDataAccess : ITodoDataAccess
         {
             Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == updatedTodo.UserId && todo.Id == updatedTodo.Id);
             if(foundTodo is null)
-                return new UpdateTodoResult() { ErrorCode = ErrorCode.NotFound, Todo = null };
+                return new UpdateTodoResult() { ErrorCode = ErrorCode.TodoNotFound, Todo = null };
 
             foundTodo.Title = updatedTodo.Title;
             foundTodo.IsDone = updatedTodo.IsDone;
@@ -85,7 +86,7 @@ public class TodoDataAccess : ITodoDataAccess
         {
             Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
             if (foundTodo is null)
-                return ErrorCode.NotFound;
+                return ErrorCode.TodoNotFound;
 
             _dataDbContext.Todos.Remove(foundTodo);
             await _dataDbContext.SaveChangesAsync();

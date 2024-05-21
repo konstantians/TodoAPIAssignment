@@ -11,4 +11,5 @@ public class Todo
     public DateTime? CreatedAt { get; set; }
     [Required]
     public string? UserId { get; set; }
+    public List<TodoItem> TodoItems { get; set; } = new List<TodoItem>();
 }
