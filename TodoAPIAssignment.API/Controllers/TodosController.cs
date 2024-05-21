@@ -47,7 +47,6 @@ public class TodosController : ControllerBase
             if(createTodoResult.ErrorCode == ErrorCode.DatabaseError)                
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            //, 
             return CreatedAtAction(nameof(GetTodo), new { todoId = createTodoResult.Todo!.Id }, createTodoResult.Todo);
         }
         catch (Exception)

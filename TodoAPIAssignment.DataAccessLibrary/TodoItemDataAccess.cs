@@ -5,12 +5,12 @@ using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 namespace TodoAPIAssignment.DataAccessLibrary;
 
-public class TodoItemDataAccess
+public class TodoItemDataAccess : ITodoItemDataAccess
 {
     private readonly DataDbContext _dataDbContext;
-    private readonly TodoDataAccess _todoDataAccess;
+    private readonly ITodoDataAccess _todoDataAccess;
 
-    public TodoItemDataAccess(DataDbContext dataDbContext, TodoDataAccess todoDataAccess)
+    public TodoItemDataAccess(DataDbContext dataDbContext, ITodoDataAccess todoDataAccess)
     {
         _dataDbContext = dataDbContext;
         _todoDataAccess = todoDataAccess;
