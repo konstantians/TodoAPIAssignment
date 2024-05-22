@@ -21,6 +21,7 @@ public class TodoItemsControllerTests
     private HttpClient httpClient;
     private string? _accessToken;
     private Todo? _testTodo;
+    private TodoItem? _testTodoItem;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -106,13 +107,89 @@ public class TodoItemsControllerTests
         //Act
         HttpResponseMessage response = await httpClient.PostAsJsonAsync($"api/todos/{todoId}/items", createTodoRequestModel);
         string? responseBody = await response.Content.ReadAsStringAsync();
-        _testTodo = JsonSerializer.Deserialize<Todo>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+        _testTodoItem = JsonSerializer.Deserialize<TodoItem>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         response.Headers.Location.Should().NotBeNull();
-        _testTodo.Should().NotBeNull();
-        _testTodo!.Title.Should().Be("MyTodoItem");
+        _testTodoItem.Should().NotBeNull();
+        _testTodoItem!.Title.Should().Be("MyTodoItem");
+    }
+
+    [Test, Order(4)]
+    public async Task GetTodoItem_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
+        string todoId = _testTodo!.Id!;
+        string todoItemId = _testTodoItem!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}/items/{todoItemId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(5)]
+    public async Task GetTodoItem_ShouldReturnTodoNotFound_IfTodoNotFoundOrDoesNotBelongToUser()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string bogusTodoId = "bogusTodoId";
+        string todoItemId = _testTodoItem!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{bogusTodoId}/items/{todoItemId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("TodoNotFound");
+    }
+
+    [Test, Order(6)]
+    public async Task GetTodoItem_ShouldReturnTodoItemNotFound_IfUserTodoExistsButTodoItemDoesNot()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+        string bogusTodoItemId = "bogusTodoItemId";
+
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}/items/{bogusTodoItemId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("TodoItemNotFound");
+    }
+
+    [Test, Order(7)]
+    public async Task GetTodoItem_ShouldSucceedAndReturnTodoItem()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+        string todoItemId = _testTodoItem!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.GetAsync($"api/todos/{todoId}/items/{todoItemId}");
+        string? responseBody = await response.Content.ReadAsStringAsync();
+        TodoItem todoItem = JsonSerializer.Deserialize<TodoItem>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        todoItem.Should().NotBeNull();
+        todoItem.Id.Should().Be(_testTodoItem!.Id!);
     }
 
     [OneTimeTearDown]
