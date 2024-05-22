@@ -7,7 +7,6 @@ using TodoAPIAssignment.DataAccessLibrary;
 using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoItemResults;
-using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
 
 namespace TodoAPIAssignment.API.Controllers;
 
@@ -55,6 +54,35 @@ public class TodoItemsController : ControllerBase
             return Created(locationUri, createTodoItemResult.TodoItem);
 
             //return CreatedAtAction(nameof(GetTodo), new { todoId = createTodoItemResult.Todo!.Id }, createTodoItemResult.Todo);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+        }
+    }
+
+    [HttpGet("{todoItemId}")]
+    public async Task<IActionResult> GetTodoItem(string todoId, string todoItemId)
+    {
+        try
+        {
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
+            if (appUser is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            GetTodoItemResult getTodoItemResult = await _todoItemDataAccess.GetUserTodoItemAsync(appUser.Id!, todoId, todoItemId);
+            if (getTodoItemResult.ErrorCode == ErrorCode.DatabaseError)
+                return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+            else if (getTodoItemResult.ErrorCode == ErrorCode.TodoNotFound)
+                return NotFound(new { ErrorMessage = "TodoNotFound" });
+            else if (getTodoItemResult.ErrorCode == ErrorCode.TodoItemNotFound)
+                return NotFound(new { ErrorMessage = "TodoItemNotFound" });
+
+            return Ok(getTodoItemResult.TodoItem);
         }
         catch (Exception)
         {
