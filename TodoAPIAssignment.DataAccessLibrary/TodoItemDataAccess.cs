@@ -61,4 +61,31 @@ public class TodoItemDataAccess : ITodoItemDataAccess
         }
     }
 
+    public async Task<UpdateTodoItemResult> UpdateUserTodoItemAsync(string userId, string todoId, TodoItem todoItem)
+    {
+        try
+        {
+            GetTodoItemResult getTodoItemResult = await GetUserTodoItemAsync(userId, todoId, todoItem.Id!);
+            if (getTodoItemResult.ErrorCode == ErrorCode.TodoNotFound)
+                return new UpdateTodoItemResult() { TodoItem = null, ErrorCode = ErrorCode.TodoNotFound };
+            else if (getTodoItemResult.ErrorCode == ErrorCode.TodoItemNotFound)
+                return new UpdateTodoItemResult() { TodoItem = null, ErrorCode = ErrorCode.TodoItemNotFound };
+            else if (getTodoItemResult.ErrorCode == ErrorCode.DatabaseError)
+                return new UpdateTodoItemResult() { TodoItem = null, ErrorCode = ErrorCode.DatabaseError };
+
+            TodoItem foundTodoItem = getTodoItemResult.TodoItem!;
+            foundTodoItem.Title = todoItem.Title;
+            foundTodoItem.Description = todoItem.Description is not null ? todoItem.Description : foundTodoItem.Description;
+            foundTodoItem.IsDone = todoItem.IsDone;
+
+            await _dataDbContext.SaveChangesAsync();
+
+            return new UpdateTodoItemResult() { ErrorCode = ErrorCode.None, TodoItem = foundTodoItem };
+        }
+        catch (Exception)
+        {
+            return new UpdateTodoItemResult() { ErrorCode = ErrorCode.DatabaseError, TodoItem = null };
+        }
+    }
+
 }

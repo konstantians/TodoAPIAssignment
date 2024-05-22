@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoItemResults;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
@@ -46,25 +47,96 @@ public class UpdateTodoItemUnitTests
     [Test]
     public async Task UpdateTodoItem_ShouldReturnNullAndNotFoundTodoMessage_IfTodoNotFound()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+        string bogusTodoId = "bogusTodoId";
+        TodoItem updatedTodoItem = new TodoItem()
+        {
+            Id = _testTodoItem.Id!,
+            Title = "TodoItemUpdatedTitle",
+            Description = "Todo Item Updated Description",
+            IsDone = true
+        };
+
+        //Act
+        UpdateTodoItemResult result = await _todoItemDataAccess.UpdateUserTodoItemAsync(userId, bogusTodoId, updatedTodoItem);
+
+        //Assert
+        result.Should().NotBeNull();
+        result.ErrorCode.Should().Be(ErrorCode.TodoNotFound);
+        result.TodoItem.Should().Be(null);
     }
 
     [Test]
     public async Task UpdateTodoItem_ShouldReturnNullAndNotFoundTodoMessage_IfTodoExistsButUserDoesNotOwnIt()
     {
-        Assert.Fail();
+        //Arrange
+        string bogusUserId = "bogusUserId";
+        string todoId = _testTodo.Id!;
+        TodoItem updatedTodoItem = new TodoItem()
+        {
+            Id = _testTodoItem.Id!,
+            Title = "TodoItemUpdatedTitle",
+            Description = "Todo Item Updated Description",
+            IsDone = true
+        };
+
+        //Act
+        UpdateTodoItemResult result = await _todoItemDataAccess.UpdateUserTodoItemAsync(bogusUserId, todoId, updatedTodoItem);
+
+        //Assert
+        result.Should().NotBeNull();
+        result.ErrorCode.Should().Be(ErrorCode.TodoNotFound);
+        result.TodoItem.Should().Be(null);
+
     }
 
     [Test]
     public async Task UpdateTodoItem_ShouldReturnNullAndNotFoundTodoItemMessage_IfTodoExistsButTodoItemDoesNotExist()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+        string todoId = _testTodo.Id!;
+        TodoItem updatedTodoItem = new TodoItem()
+        {
+            Id = "bogusTodoItemId",
+            Title = "TodoItemUpdatedTitle",
+            Description = "Todo Item Updated Description",
+            IsDone = true
+        };
+
+        //Act
+        UpdateTodoItemResult result = await _todoItemDataAccess.UpdateUserTodoItemAsync(userId, todoId, updatedTodoItem);
+
+        //Assert
+        result.Should().NotBeNull();
+        result.ErrorCode.Should().Be(ErrorCode.TodoItemNotFound);
+        result.TodoItem.Should().Be(null);
+
     }
 
     [Test]
     public async Task UpdateTodoItem_ShouldUpdateTheTodoItem()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+        string todoId = _testTodo.Id!;
+        TodoItem updatedTodoItem = new TodoItem()
+        {
+            Id = _testTodoItem.Id!,
+            Title = "TodoItemUpdatedTitle",
+            Description = "Todo Item Updated Description",
+            IsDone = true
+        };
+
+        //Act
+        UpdateTodoItemResult result = await _todoItemDataAccess.UpdateUserTodoItemAsync(userId, todoId, updatedTodoItem);
+
+        //Assert
+        result.Should().NotBeNull();
+        result.ErrorCode.Should().Be(ErrorCode.None);
+        result.TodoItem.Should().NotBeNull();
+        result.TodoItem!.Id.Should().Be(updatedTodoItem.Id);
     }
 
     [TearDown]
