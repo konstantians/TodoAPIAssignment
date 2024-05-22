@@ -6,5 +6,6 @@ namespace TodoAPIAssignment.DataAccessLibrary
     public interface ITodoItemDataAccess
     {
         Task<CreateTodoItemResult> CreateUserTodoItemAsync(string userId, string todoId, TodoItem todoItem);
+        Task<GetTodoItemResult> GetUserTodoItemAsync(string userId, string todoId, string todoItemId);
     }
 }
