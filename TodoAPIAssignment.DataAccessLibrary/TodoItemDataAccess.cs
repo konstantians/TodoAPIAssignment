@@ -1,4 +1,5 @@
-﻿using TodoAPIAssignment.DataAccessLibrary.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoItemResults;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
@@ -39,4 +40,25 @@ public class TodoItemDataAccess : ITodoItemDataAccess
             return new CreateTodoItemResult() { ErrorCode = ErrorCode.DatabaseError, TodoItem = null };
         }
     }
+
+    public async Task<GetTodoItemResult> GetUserTodoItemAsync(string userId, string todoId, string todoItemId)
+    {
+        try
+        {
+            Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
+            if (foundTodo is null)
+                return new GetTodoItemResult() { ErrorCode = ErrorCode.TodoNotFound, TodoItem = null };
+
+            TodoItem? foundTodoItem = foundTodo.TodoItems.FirstOrDefault(todoItem => todoItem.Id == todoItemId);
+            if (foundTodoItem is null)
+                return new GetTodoItemResult() { ErrorCode = ErrorCode.TodoItemNotFound, TodoItem = null };
+
+            return new GetTodoItemResult() { ErrorCode = ErrorCode.None, TodoItem = foundTodoItem };
+        }
+        catch (Exception)
+        {
+            return new GetTodoItemResult() { ErrorCode = ErrorCode.DatabaseError, TodoItem = null };
+        }
+    }
+
 }
