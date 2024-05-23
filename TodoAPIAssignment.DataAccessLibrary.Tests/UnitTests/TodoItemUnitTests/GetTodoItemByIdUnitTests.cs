@@ -62,7 +62,6 @@ public class GetTodoItemByIdUnitTests
     [Test]
     public async Task GetTodoItemById_ShouldReturnNullAndNotFoundTodoMessage_IfTodoExistsButUserDoesNotOwnIt()
     {
-
         //Arrange
         string bogusUserId = "bogusUserId";
         string todoId = _testTodo.Id!;
@@ -80,7 +79,6 @@ public class GetTodoItemByIdUnitTests
     [Test]
     public async Task GetTodoItemById_ShouldReturnNullAndNotFoundTodoItemMessage_IfTodoExistsButTodoItemDoesNotExist()
     {
-
         //Arrange
         string userId = "1";
         string todoId = _testTodo.Id!;
@@ -98,7 +96,6 @@ public class GetTodoItemByIdUnitTests
     [Test]
     public async Task GetTodoItemById_ShouldReturnTodoItem()
     {
-
         //Arrange
         string userId = "1";
         string todoId = _testTodo.Id!;
