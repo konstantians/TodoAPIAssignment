@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using TodoAPIAssignment.DataAccessLibrary.Enums;
 using TodoAPIAssignment.DataAccessLibrary.Models;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoItemResults;
 using TodoAPIAssignment.DataAccessLibrary.Models.Results.TodoResults;
@@ -45,24 +47,64 @@ public class DeleteTodoItemUnitTests
     [Test]
     public async Task DeleteTodoItem_ShouldReturnNullAndNotFoundTodoMessage_IfTodoNotFound()
     {
-        Assert.Fail();
+        //Arrange
+        string bogusUserId = "1";
+        string bogusTodoId = "bogusTodoId";
+        string todoItemId = _testTodoItem.Id!;
+
+        //Act
+        ErrorCode errorCode = await _todoItemDataAccess.DeleteUserTodoItemAsync(bogusUserId, bogusTodoId, todoItemId);
+
+        //Assert
+        errorCode.Should().Be(ErrorCode.TodoNotFound);
     }
 
     [Test]
     public async Task DeleteTodoItem_ShouldReturnNullAndNotFoundTodoMessage_IfTodoExistsButUserDoesNotOwnIt()
     {
-        Assert.Fail();
+        //Arrange
+        string bogusUserId = "bogusUserId";
+        string todoId = _testTodo.Id!;
+        string todoItemId = _testTodoItem.Id!;
+
+        //Act
+        ErrorCode errorCode = await _todoItemDataAccess.DeleteUserTodoItemAsync(bogusUserId, todoId, todoItemId);
+
+        //Assert
+        errorCode.Should().Be(ErrorCode.TodoNotFound);
     }
 
     [Test]
     public async Task DeleteTodoItem_ShouldReturnNullAndNotFoundTodoItemMessage_IfTodoExistsButTodoItemDoesNotExist()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+        string todoId = _testTodo.Id!;
+        string bogusTodoItemId = "bogusTodoItemId";
+
+        //Act
+        ErrorCode errorCode = await _todoItemDataAccess.DeleteUserTodoItemAsync(userId, todoId, bogusTodoItemId);
+
+        //Assert
+        errorCode.Should().Be(ErrorCode.TodoItemNotFound);
     }
 
     [Test]
     public async Task DeleteTodoItem_ShouldDeleteTodoItem()
     {
-        Assert.Fail();
+        //Arrange
+        string userId = "1";
+        string todoId = _testTodo.Id!;
+        string todoItemId = _testTodoItem.Id!;
+
+        //Act
+        ErrorCode errorCode = await _todoItemDataAccess.DeleteUserTodoItemAsync(userId, todoId, todoItemId);
+        GetTodoItemResult getTodoItemResultAfterDelete = await _todoItemDataAccess.GetUserTodoItemAsync(userId, todoId, todoItemId);
+
+        //Assert
+        errorCode.Should().Be(ErrorCode.None);
+        getTodoItemResultAfterDelete.Should().NotBeNull();
+        getTodoItemResultAfterDelete.ErrorCode.Should().Be(ErrorCode.TodoItemNotFound);
+        getTodoItemResultAfterDelete.TodoItem.Should().BeNull();
     }
 }

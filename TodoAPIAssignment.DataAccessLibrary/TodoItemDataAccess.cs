@@ -88,4 +88,27 @@ public class TodoItemDataAccess : ITodoItemDataAccess
         }
     }
 
+    public async Task<ErrorCode> DeleteUserTodoItemAsync(string userId, string todoId, string todoItemId)
+    {
+        try
+        {
+            Todo? foundTodo = await _dataDbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == todoId);
+            if (foundTodo is null)
+                return ErrorCode.TodoNotFound;
+
+            TodoItem? foundTodoItem = foundTodo.TodoItems.FirstOrDefault(todoItem => todoItem.Id == todoItemId);
+            if (foundTodoItem is null)
+                return ErrorCode.TodoItemNotFound;
+
+            foundTodo.TodoItems.Remove(foundTodoItem);
+            await _dataDbContext.SaveChangesAsync();
+
+            return ErrorCode.None;
+        }
+        catch (Exception)
+        {
+            return ErrorCode.DatabaseError;
+        }
+    }
+
 }
