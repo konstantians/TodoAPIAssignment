@@ -49,11 +49,8 @@ public class TodoItemsController : ControllerBase
             else if (createTodoItemResult.ErrorCode == ErrorCode.DatabaseError)
                 return StatusCode(500, new { ErrorMessage = "InternalServerError" });
 
-            //TODO when I add the GetTodoById make this dynamic
-            var locationUri = $"https://localhost:7279/api/todos/{todoId}/items/{createTodoItemResult.TodoItem!.Id}";
-            return Created(locationUri, createTodoItemResult.TodoItem);
-
-            //return CreatedAtAction(nameof(GetTodo), new { todoId = createTodoItemResult.Todo!.Id }, createTodoItemResult.Todo);
+            return CreatedAtAction(nameof(GetTodoItem), new { todoId = todoId, todoItemId = createTodoItemResult.TodoItem!.Id }, 
+                createTodoItemResult.TodoItem);
         }
         catch (Exception)
         {
@@ -120,6 +117,35 @@ public class TodoItemsController : ControllerBase
 
 
             return Ok(updatedTodoItem);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+        }
+    }
+
+    [HttpDelete("{todoItemId}")]
+    public async Task<IActionResult> DeleteTodoItem(string todoId, string todoItemId)
+    {
+        try
+        {
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
+            if (appUser is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            ErrorCode errorCode = await _todoItemDataAccess.DeleteUserTodoItemAsync(appUser.Id!, todoId, todoItemId);
+            if (errorCode == ErrorCode.DatabaseError)
+                return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+            else if (errorCode == ErrorCode.TodoNotFound)
+                return NotFound(new { ErrorMessage = "TodoNotFound" });
+            else if (errorCode == ErrorCode.TodoItemNotFound)
+                return NotFound(new { ErrorMessage = "TodoItemNotFound" });
+
+            return NoContent();
         }
         catch (Exception)
         {
