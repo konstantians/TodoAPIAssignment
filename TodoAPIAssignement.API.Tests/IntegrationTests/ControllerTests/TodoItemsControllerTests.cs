@@ -192,6 +192,108 @@ public class TodoItemsControllerTests
         todoItem.Id.Should().Be(_testTodoItem!.Id!);
     }
 
+    [Test, Order(8)]
+    public async Task UpdateTodoItem_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
+        string todoId = _testTodo!.Id!;
+        TodoItem todoItem = new TodoItem()
+        {
+            Id = _testTodoItem!.Id!,
+            Title = "MyTodoItemUpdated",
+            Description = "Todo Item Description Updated",
+            IsDone = false
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos/{todoId}/items", todoItem);
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(9)]
+    public async Task UpdateTodoItem_ShouldReturnTodoNotFound_IfTodoNotFoundOrDoesNotBelongToUser()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string bogusTodoId = "bogusTodoId";
+        TodoItem todoItem = new TodoItem()
+        {
+            Id = _testTodoItem!.Id!,
+            Title = "MyTodoItemUpdated",
+            Description = "Todo Item Description Updated",
+            IsDone = false
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos/{bogusTodoId}/items", todoItem);
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("TodoNotFound");
+    }
+
+    [Test, Order(10)]
+    public async Task UpdateTodoItem_ShouldReturnTodoItemNotFound_IfUserTodoExistsButTodoItemDoesNot()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+        TodoItem todoItem = new TodoItem()
+        {
+            Id = "bogusTodoItemId",
+            Title = "MyTodoItemUpdated",
+            Description = "Todo Item Description Updated",
+            IsDone = false
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos/{todoId}/items", todoItem);
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("TodoItemNotFound");
+    }
+
+    [Test, Order(11)]
+    public async Task UpdateTodoItem_ShouldSucceedUpdateTodoItemAndReturnUpdatedTodoItem()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+        string todoItemTitle = "MyTodoItemUpdated";
+        TodoItem todoItem = new TodoItem()
+        {
+            Id = _testTodoItem!.Id!,
+            Title = todoItemTitle,
+            Description = "Todo Item Description Updated",
+            IsDone = false
+        };
+
+        //Act
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/todos/{todoId}/items", todoItem);
+        string? responseBody = await response.Content.ReadAsStringAsync();
+        TodoItem updatedTodoItem = JsonSerializer.Deserialize<TodoItem>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        updatedTodoItem.Should().NotBeNull();
+        updatedTodoItem.Id.Should().Be(_testTodoItem!.Id!);
+        updatedTodoItem.Title.Should().Be(todoItemTitle);
+    }
+
+
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
