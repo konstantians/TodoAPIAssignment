@@ -137,6 +137,7 @@ public class UpdateTodoItemUnitTests
         result.ErrorCode.Should().Be(ErrorCode.None);
         result.TodoItem.Should().NotBeNull();
         result.TodoItem!.Id.Should().Be(updatedTodoItem.Id);
+        result.TodoItem!.Title.Should().Be(updatedTodoItem.Title);
     }
 
     [TearDown]
