@@ -90,6 +90,43 @@ public class TodoItemsController : ControllerBase
         }
     }
 
+    [HttpPut()]
+    public async Task<IActionResult> UpdateTodoItem(string todoId, [FromBody] UpdateTodoItemRequestModel updateTodoItemRequestModel)
+    {
+        try
+        {
+            string? token = ExtractTokenFromHeader(Request.Headers["Authorization"]!);
+            if (token is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            AppUser? appUser = await _authenticationDataAccess.CheckAndDecodeAccessTokenAsync(token);
+            if (appUser is null)
+                return BadRequest(new { ErrorMessage = "InvalidAccessToken" });
+
+            TodoItem updatedTodoItem = new TodoItem() {
+                Id = updateTodoItemRequestModel.Id,
+                Title = updateTodoItemRequestModel.Title,
+                Description = updateTodoItemRequestModel.Description,
+                IsDone = updateTodoItemRequestModel.IsDone
+            };
+
+            UpdateTodoItemResult updateTodoItemResult = await _todoItemDataAccess.UpdateUserTodoItemAsync(appUser.Id!, todoId, updatedTodoItem);
+            if (updateTodoItemResult.ErrorCode == ErrorCode.DatabaseError)
+                return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+            else if (updateTodoItemResult.ErrorCode == ErrorCode.TodoNotFound)
+                return NotFound(new { ErrorMessage = "TodoNotFound" });
+            else if (updateTodoItemResult.ErrorCode == ErrorCode.TodoItemNotFound)
+                return NotFound(new { ErrorMessage = "TodoItemNotFound" });
+
+
+            return Ok(updatedTodoItem);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { ErrorMessage = "InternalServerError" });
+        }
+    }
+
     private string? ExtractTokenFromHeader(string header)
     {
         if (header.IsNullOrEmpty() || !header.StartsWith("Bearer "))
