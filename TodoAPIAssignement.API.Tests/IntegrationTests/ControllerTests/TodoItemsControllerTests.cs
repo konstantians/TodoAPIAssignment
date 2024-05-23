@@ -293,6 +293,86 @@ public class TodoItemsControllerTests
         updatedTodoItem.Title.Should().Be(todoItemTitle);
     }
 
+    [Test, Order(12)]
+    public async Task DeleteTodoItem_ShouldReturnInvalidTokenError_IfTokenNotValid()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "bogusToken");
+        string todoId = _testTodo!.Id!;
+        string todoItemId = _testTodoItem!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{todoId}/items/{todoItemId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("InvalidAccessToken");
+    }
+
+    [Test, Order(13)]
+    public async Task DeleteTodoItem_ShouldReturnTodoNotFound_IfTodoNotFoundOrDoesNotBelongToUser()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string bogusTodoId = "bogusTodoId";
+        string todoItemId = _testTodoItem!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{bogusTodoId}/items/{todoItemId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("TodoNotFound");
+    }
+
+    [Test, Order(14)]
+    public async Task DeleteTodoItem_ShouldReturnTodoItemNotFound_IfUserTodoExistsButTodoItemDoesNot()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+        string bogusTodoItemId = "bogusTodoItemId";
+
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{todoId}/items/{bogusTodoItemId}");
+        string? errorMessage = await JsonParsingHelperMethods.GetSingleStringValueFromBody(response, "errorMessage");
+
+        //Assert
+        response.Should().NotBeNull();
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        errorMessage.Should().NotBeNull();
+        errorMessage.Should().Be("TodoItemNotFound");
+    }
+
+    [Test, Order(15)]
+    public async Task DeleteTodoItem_ShouldDeleteTodoItemAndReturnNoContent()
+    {
+        //Arrange
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+        string todoId = _testTodo!.Id!;
+        string todoItemId = _testTodoItem!.Id!;
+
+        //Act
+        HttpResponseMessage response = await httpClient.DeleteAsync($"api/todos/{todoId}/items/{todoItemId}");
+
+        HttpResponseMessage getResponseAfterTodoItemDeletion = await httpClient.GetAsync($"api/todos/{todoId}/items/{todoItemId}");
+        string? subsequentGetRequestErrorMessage = await JsonParsingHelperMethods.
+            GetSingleStringValueFromBody(getResponseAfterTodoItemDeletion, "errorMessage");
+
+        //Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        getResponseAfterTodoItemDeletion.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        subsequentGetRequestErrorMessage.Should().NotBeNull();
+        subsequentGetRequestErrorMessage.Should().Be("TodoItemNotFound");
+    }
+
 
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
