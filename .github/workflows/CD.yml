@@ -1,0 +1,68 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+          include-prerelease: true
+
+      - name: Restore Dependencies Of Module AuthenticationLibrary
+        run: dotnet restore TodoAPIAssignment.AuthenticationLibrary/TodoAPIAssignment.AuthenticationLibrary.csproj
+      - name: Restore Dependencies Of Module DataAccessLibrary
+        run: dotnet restore TodoAPIAssignment.DataAccessLibrary/TodoAPIAssignment.DataAccessLibrary.csproj
+      - name: Restore Dependencies Of Module TodoRestAPI
+        run: dotnet restore TodoAPIAssignment.API/TodoAPIAssignment.API.csproj
+
+      - name: Build Module AuthenticationLibrary
+        run: dotnet build TodoAPIAssignment.AuthenticationLibrary/TodoAPIAssignment.AuthenticationLibrary.csproj --configuration Release --no-restore
+      - name: Build Module DataAccessLibrary
+        run: dotnet build TodoAPIAssignment.DataAccessLibrary/TodoAPIAssignment.DataAccessLibrary.csproj --configuration Release --no-restore
+      - name: Build Module TodoRestAPI
+        run: dotnet build TodoAPIAssignment.API/TodoAPIAssignment.API.csproj --configuration Release --no-restore
+
+      - name: Publish Module AuthenticationLibrary
+        run: dotnet publish TodoAPIAssignment.AuthenticationLibrary/TodoAPIAssignment.AuthenticationLibrary.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
+      - name: Publish Module DataAccessLibrary
+        run: dotnet publish TodoAPIAssignment.DataAccessLibrary/TodoAPIAssignment.DataAccessLibrary.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
+      - name: Publish Module TodoRestAPI
+        run: dotnet publish TodoAPIAssignment.API/TodoAPIAssignment.API.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}\\myapp
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'production'
+    
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: .net-app
+      
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'TodoRestAPIAssignment'
+          slot-name: 'production'
+          package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_38F92D569C77471C94678B7A0E8067B5 }}
